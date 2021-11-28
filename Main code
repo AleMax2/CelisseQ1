@@ -210,4 +210,4 @@ BIC = []
 n_components_range = range(1,10)
 for n_components in n_components_range:
         lik.append(GMM(X,number_of_sources=n_components,iterations=100))
-        #BIC.append(bic(likelyhood=GMM(X,number_of_sources=n_components,iterations=100),number_of_sources=n_components))# Ce trouc ne marche pas.
+        #BIC.append(bic(likelyhood=GMM(X,number_of_sources=n_components,iterations=100),number_of_sources=n_components))# Ce truc ne marche pas.
