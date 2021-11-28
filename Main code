@@ -150,5 +150,64 @@ class GMM:
 GMM = GMM(X,number_of_sources=3,iterations=50) 
 GMM.run()
 GMM.predict([[0.5,0.5]])
-       
-    
+
+# Pour  la deuxiéme partie j'ai modifié le code pour avoir comme seul output la likelyhood et j'ai fixé tous les element d'initiation. 
+# Apres j'ai essayé de faire la formule pour le BIC mais je pense de commettre un erreur dans la definition de la function.
+
+def GMM(X,number_of_sources,iterations):
+        reg_cov = 1e-6*np.identity(len(X[0]))
+        x,y = np.meshgrid(np.sort(X[:,0]),np.sort(X[:,1]))
+        XY = np.array([x.flatten(),y.flatten()]).T
+           
+        mu = np.zeros((number_of_sources,len(X[0]))) # This is a nxm matrix since we assume n sources (n Gaussians) where each has m dimensions
+        cov = np.zeros((number_of_sources,len(X[0]),len(X[0]))) # We need a nxmxm covariance matrix for each source since we have m features --> We create symmetric covariance matrices with ones on the digonal
+        for dim in range(len(cov)):
+            np.fill_diagonal(cov[dim],5)
+
+        pi = np.ones(number_of_sources)/number_of_sources # Are "Fractions"
+        log_likelihoods = [] 
+            
+        for i in range(iterations):               
+
+            """E Step"""
+            r_ic = np.zeros((len(X),len(cov)))
+
+            for m,co,p,r in zip(mu,cov,pi,range(len(r_ic[0]))):
+                co+= reg_cov
+                mn = multivariate_normal(mean=m,cov=co)
+                r_ic[:,r] = p*mn.pdf(X)/np.sum([pi_c*multivariate_normal(mean=mu_c,cov=cov_c).pdf(X) for pi_c,mu_c,cov_c in zip(pi,mu,cov+reg_cov)],axis=0)
+
+            """M Step"""
+
+            # Calculate the new mean vector and new covariance matrices, based on the probable membership of the single x_i to classes c --> r_ic
+            mu = []
+            cov = []
+            pi = []
+            log_likelihood = []
+
+            for c in range(len(r_ic[0])):
+                m_c = np.sum(r_ic[:,c],axis=0)
+                mu_c = (1/m_c)*np.sum(X*r_ic[:,c].reshape(len(X),1),axis=0)
+                mu.append(mu_c)
+
+                # Calculate the covariance matrix per source based on the new mean
+                cov.append(((1/m_c)*np.dot((np.array(r_ic[:,c]).reshape(len(X),1)*(X-mu_c)).T,(X-mu_c)))+reg_cov)
+                # Calculate pi_new which is the "fraction of points" respectively the fraction of the probability assigned to each source 
+                pi.append(m_c/np.sum(r_ic)) 
+     
+            """Log likelihood"""
+            log_likelihoods.append(np.log(np.sum([k*multivariate_normal(mu[i],cov[j]).pdf(X) for k,i,j in zip(pi,range(len(mu)),range(len(cov)))])))    
+        print(log_likelihoods[-1])
+        
+import math
+n=len(X)
+def bic(likelyhood,number_of_sources):
+    d= 3*number_of_sources - 1
+    return likelyhood - d*math.log(n)
+
+lik = []
+BIC = []
+n_components_range = range(1,10)
+for n_components in n_components_range:
+        lik.append(GMM(X,number_of_sources=n_components,iterations=100))
+        #BIC.append(bic(likelyhood=GMM(X,number_of_sources=n_components,iterations=100),number_of_sources=n_components))# Ce trouc ne marche pas.
