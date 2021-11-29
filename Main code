@@ -212,3 +212,20 @@ for n_components in n_components_range:
         lik.append(GMM(X,number_of_sources=n_components,iterations=100))
         #BIC.append(bic(likelyhood=GMM(X,number_of_sources=n_components,iterations=100),number_of_sources=n_components))
         #Ce truc ne marche pas parce que GMM(...) donne une liste de None.
+# Par contre si vous arrivez a l'inserire la formule pour le BIC est :
+def bic():
+    d = self.number_of_sources*3 - 1
+    value = log_likelihoods[-1] - (d/2)*math.log(len(X))
+    return value
+
+# Et pour l'ICL c'est: 
+def ICL():
+    logric = np.log(r_ic)
+    multi = np.multiply(r_ic,logric)
+    sumline = multi.sum(axis=1) # peut etre que il faut invertire l'operation (somme par colonne et apres on somme les 3 lignes) mais je pense que la formule indique ca.
+    ENT = sumline.sum()
+    d = self.number_of_sources*3 - 1
+    value = log_likelihoods[-1] - (d/2)*math.log(len(X))
+    icl = value - ENT
+    return icl # On peut compacter la function en prenant la valeur du BIC et après on enleve l'èntropie. 
+    
