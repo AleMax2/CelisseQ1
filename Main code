@@ -226,6 +226,6 @@ def ICL():
     ENT = sumline.sum()
     d = self.number_of_sources*3 - 1
     value = log_likelihoods[-1] - (d/2)*math.log(len(X))
-    icl = value - ENT
+    icl = value + ENT
     return icl # On peut compacter la function en prenant la valeur du BIC et après on enleve l'èntropie. 
     
